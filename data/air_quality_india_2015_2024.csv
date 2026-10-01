@@ -1,0 +1,81 @@
+Year,City,State,Region,PM2.5 (ug/m3),PM10 (ug/m3),AQI,AQI_Category,Data_Notes
+2015,Delhi,Delhi,North,119,255.8,297,Poor,Interpolated between reported anchor years
+2016,Delhi,Delhi,North,115,247.2,283,Poor,Interpolated between reported anchor years
+2017,Delhi,Delhi,North,111,238.6,269,Poor,Interpolated between reported anchor years
+2018,Delhi,Delhi,North,113,242.9,276,Poor,Interpolated between reported anchor years
+2019,Delhi,Delhi,North,98,210.7,225,Poor,Reported (CPCB/IQAir published figure)
+2020,Delhi,Delhi,North,84,180.6,180,Moderate,Reported (CPCB/IQAir published figure)
+2021,Delhi,Delhi,North,96,206.4,218,Poor,Interpolated between reported anchor years
+2022,Delhi,Delhi,North,100,215.0,232,Poor,Interpolated between reported anchor years
+2023,Delhi,Delhi,North,92,197.8,204,Poor,Reported (CPCB/IQAir published figure)
+2024,Delhi,Delhi,North,103,221.4,242,Poor,Reported (CPCB/IQAir published figure)
+2015,Lucknow,Uttar Pradesh,North,105,225.8,249,Poor,Interpolated between reported anchor years
+2016,Lucknow,Uttar Pradesh,North,100,215.0,232,Poor,Interpolated between reported anchor years
+2017,Lucknow,Uttar Pradesh,North,96,206.4,218,Poor,Interpolated between reported anchor years
+2018,Lucknow,Uttar Pradesh,North,98,210.7,225,Poor,Interpolated between reported anchor years
+2019,Lucknow,Uttar Pradesh,North,92,197.8,204,Poor,Reported (CPCB/IQAir published figure)
+2020,Lucknow,Uttar Pradesh,North,70,150.5,132,Moderate,Reported (CPCB/IQAir published figure)
+2021,Lucknow,Uttar Pradesh,North,85,182.8,183,Moderate,Interpolated between reported anchor years
+2022,Lucknow,Uttar Pradesh,North,90,193.5,200,Moderate,Interpolated between reported anchor years
+2023,Lucknow,Uttar Pradesh,North,88,189.2,193,Moderate,Reported (CPCB/IQAir published figure)
+2024,Lucknow,Uttar Pradesh,North,86,184.9,186,Moderate,Reported (CPCB/IQAir published figure)
+2015,Kolkata,West Bengal,East,68,132.6,125,Moderate,Interpolated between reported anchor years
+2016,Kolkata,West Bengal,East,65,126.8,115,Moderate,Interpolated between reported anchor years
+2017,Kolkata,West Bengal,East,62,120.9,104,Moderate,Interpolated between reported anchor years
+2018,Kolkata,West Bengal,East,64,124.8,111,Moderate,Interpolated between reported anchor years
+2019,Kolkata,West Bengal,East,58,113.1,97,Satisfactory,Reported (CPCB/IQAir published figure)
+2020,Kolkata,West Bengal,East,44,85.8,73,Satisfactory,Reported (CPCB/IQAir published figure)
+2021,Kolkata,West Bengal,East,54,105.3,90,Satisfactory,Interpolated between reported anchor years
+2022,Kolkata,West Bengal,East,58,113.1,97,Satisfactory,Interpolated between reported anchor years
+2023,Kolkata,West Bengal,East,56,109.2,93,Satisfactory,Reported (CPCB/IQAir published figure)
+2024,Kolkata,West Bengal,East,53,103.3,88,Satisfactory,Reported (CPCB/IQAir published figure)
+2015,Ahmedabad,Gujarat,West,62,127.1,104,Moderate,Interpolated between reported anchor years
+2016,Ahmedabad,Gujarat,West,60,123.0,100,Satisfactory,Interpolated between reported anchor years
+2017,Ahmedabad,Gujarat,West,58,118.9,97,Satisfactory,Interpolated between reported anchor years
+2018,Ahmedabad,Gujarat,West,57,116.8,95,Satisfactory,Interpolated between reported anchor years
+2019,Ahmedabad,Gujarat,West,53,108.6,88,Satisfactory,Reported (CPCB/IQAir published figure)
+2020,Ahmedabad,Gujarat,West,41,84.0,68,Satisfactory,Reported (CPCB/IQAir published figure)
+2021,Ahmedabad,Gujarat,West,49,100.4,81,Satisfactory,Interpolated between reported anchor years
+2022,Ahmedabad,Gujarat,West,52,106.6,86,Satisfactory,Interpolated between reported anchor years
+2023,Ahmedabad,Gujarat,West,51,104.5,85,Satisfactory,Reported (CPCB/IQAir published figure)
+2024,Ahmedabad,Gujarat,West,49,100.4,81,Satisfactory,Reported (CPCB/IQAir published figure)
+2015,Mumbai,Maharashtra,West,50,102.5,83,Satisfactory,Interpolated between reported anchor years
+2016,Mumbai,Maharashtra,West,48,98.4,80,Satisfactory,Interpolated between reported anchor years
+2017,Mumbai,Maharashtra,West,46,94.3,76,Satisfactory,Interpolated between reported anchor years
+2018,Mumbai,Maharashtra,West,47,96.3,78,Satisfactory,Interpolated between reported anchor years
+2019,Mumbai,Maharashtra,West,44,90.2,73,Satisfactory,Reported (CPCB/IQAir published figure)
+2020,Mumbai,Maharashtra,West,33,67.6,54,Satisfactory,Reported (CPCB/IQAir published figure)
+2021,Mumbai,Maharashtra,West,41,84.0,68,Satisfactory,Interpolated between reported anchor years
+2022,Mumbai,Maharashtra,West,44,90.2,73,Satisfactory,Interpolated between reported anchor years
+2023,Mumbai,Maharashtra,West,44,90.2,73,Satisfactory,Reported (CPCB/IQAir published figure)
+2024,Mumbai,Maharashtra,West,41,84.0,68,Satisfactory,Reported (CPCB/IQAir published figure)
+2015,Hyderabad,Telangana,South,45,83.2,75,Satisfactory,Interpolated between reported anchor years
+2016,Hyderabad,Telangana,South,43,79.5,71,Satisfactory,Interpolated between reported anchor years
+2017,Hyderabad,Telangana,South,41,75.9,68,Satisfactory,Interpolated between reported anchor years
+2018,Hyderabad,Telangana,South,42,77.7,70,Satisfactory,Interpolated between reported anchor years
+2019,Hyderabad,Telangana,South,38,70.3,63,Satisfactory,Reported (CPCB/IQAir published figure)
+2020,Hyderabad,Telangana,South,29,53.7,48,Good,Reported (CPCB/IQAir published figure)
+2021,Hyderabad,Telangana,South,35,64.8,58,Satisfactory,Interpolated between reported anchor years
+2022,Hyderabad,Telangana,South,38,70.3,63,Satisfactory,Interpolated between reported anchor years
+2023,Hyderabad,Telangana,South,37,68.5,61,Satisfactory,Reported (CPCB/IQAir published figure)
+2024,Hyderabad,Telangana,South,35,64.8,58,Satisfactory,Reported (CPCB/IQAir published figure)
+2015,Bengaluru,Karnataka,South,38,70.3,63,Satisfactory,Interpolated between reported anchor years
+2016,Bengaluru,Karnataka,South,36,66.6,59,Satisfactory,Interpolated between reported anchor years
+2017,Bengaluru,Karnataka,South,34,62.9,56,Satisfactory,Interpolated between reported anchor years
+2018,Bengaluru,Karnataka,South,33,61.1,54,Satisfactory,Interpolated between reported anchor years
+2019,Bengaluru,Karnataka,South,31,57.4,51,Satisfactory,Reported (CPCB/IQAir published figure)
+2020,Bengaluru,Karnataka,South,24,44.4,40,Good,Reported (CPCB/IQAir published figure)
+2021,Bengaluru,Karnataka,South,29,53.7,48,Good,Interpolated between reported anchor years
+2022,Bengaluru,Karnataka,South,31,57.4,51,Satisfactory,Interpolated between reported anchor years
+2023,Bengaluru,Karnataka,South,30,55.5,50,Good,Reported (CPCB/IQAir published figure)
+2024,Bengaluru,Karnataka,South,29,53.7,48,Good,Reported (CPCB/IQAir published figure)
+2015,Chennai,Tamil Nadu,South,33,61.1,54,Satisfactory,Interpolated between reported anchor years
+2016,Chennai,Tamil Nadu,South,32,59.2,53,Satisfactory,Interpolated between reported anchor years
+2017,Chennai,Tamil Nadu,South,31,57.4,51,Satisfactory,Interpolated between reported anchor years
+2018,Chennai,Tamil Nadu,South,32,59.2,53,Satisfactory,Interpolated between reported anchor years
+2019,Chennai,Tamil Nadu,South,29,53.7,48,Good,Reported (CPCB/IQAir published figure)
+2020,Chennai,Tamil Nadu,South,22,40.7,37,Good,Reported (CPCB/IQAir published figure)
+2021,Chennai,Tamil Nadu,South,27,50.0,45,Good,Interpolated between reported anchor years
+2022,Chennai,Tamil Nadu,South,29,53.7,48,Good,Interpolated between reported anchor years
+2023,Chennai,Tamil Nadu,South,28,51.8,47,Good,Reported (CPCB/IQAir published figure)
+2024,Chennai,Tamil Nadu,South,27,50.0,45,Good,Reported (CPCB/IQAir published figure)

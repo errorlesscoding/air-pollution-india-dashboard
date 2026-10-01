@@ -1,0 +1,37 @@
+State,Region,Representative_City,PM2.5_2024 (ug/m3),PM10_2024 (ug/m3),AQI_2024,AQI_Category,NCAP_Non_Attainment_State,NCAP_Non_Attainment_Cities_Count
+Delhi,North,Delhi,103,221.4,242,Poor,Yes,6
+Haryana,North,Faridabad,95,204.2,215,Poor,Yes,9
+Bihar,North,Patna,90,193.5,200,Moderate,Yes,3
+Uttar Pradesh,North,Lucknow,86,184.9,186,Moderate,Yes,17
+Punjab,North,Amritsar,75,161.2,149,Moderate,Yes,8
+Chandigarh,North,Chandigarh,70,150.5,132,Moderate,Yes,1
+Rajasthan,North,Jaipur,68,146.2,125,Moderate,Yes,8
+Chhattisgarh,Central,Raipur,60,120.0,100,Satisfactory,Yes,2
+Jharkhand,East,Ranchi,58,113.1,97,Satisfactory,Yes,3
+Madhya Pradesh,Central,Bhopal,55,110.0,92,Satisfactory,Yes,6
+Uttarakhand,North,Dehradun,55,118.2,92,Satisfactory,Yes,2
+Meghalaya,Northeast,Shillong,55,93.5,92,Satisfactory,Yes,1
+West Bengal,East,Kolkata,53,103.3,88,Satisfactory,Yes,5
+Odisha,East,Bhubaneswar,50,97.5,83,Satisfactory,Yes,6
+Gujarat,West,Ahmedabad,49,100.4,81,Satisfactory,Yes,4
+Assam,Northeast,Guwahati,48,81.6,80,Satisfactory,Yes,2
+Jammu and Kashmir,North,Srinagar,45,96.8,75,Satisfactory,Yes,2
+Maharashtra,West,Mumbai,41,84.0,68,Satisfactory,Yes,19
+Dadra and Nagar Haveli and Daman and Diu,West,Silvassa,40,82.0,66,Satisfactory,No,0
+Andhra Pradesh,South,Vijayawada,40,74.0,66,Satisfactory,Yes,3
+Himachal Pradesh,North,Shimla,35,75.2,58,Satisfactory,No,0
+Telangana,South,Hyderabad,35,64.8,58,Satisfactory,Yes,2
+Karnataka,South,Bengaluru,29,53.7,48,Good,Yes,4
+Tripura,Northeast,Agartala,28,47.6,47,Good,No,0
+Tamil Nadu,South,Chennai,27,50.0,45,Good,Yes,3
+Goa,West,Panaji,25,51.2,42,Good,No,0
+Manipur,Northeast,Imphal,22,37.4,37,Good,No,0
+Puducherry,South,Puducherry,22,40.7,37,Good,No,0
+Ladakh,North,Leh,20,43.0,33,Good,No,0
+Arunachal Pradesh,Northeast,Itanagar,20,34.0,33,Good,No,0
+Nagaland,Northeast,Kohima,20,34.0,33,Good,No,0
+Kerala,South,Thiruvananthapuram,18,33.3,30,Good,No,0
+Mizoram,Northeast,Aizawl,18,30.6,30,Good,No,0
+Andaman and Nicobar Islands,South,Port Blair,15,27.8,25,Good,No,0
+Sikkim,Northeast,Gangtok,15,25.5,25,Good,No,0
+Lakshadweep,South,Kavaratti,12,22.2,20,Good,No,0

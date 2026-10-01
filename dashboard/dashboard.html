@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Air Pollution Trends in Major Indian Cities — Dashboard</title>
+<script src="chart.umd.min.js"></script>
+<style>
+  :root{
+    --navy:#122A45; --navy2:#1F4E78; --bg:#F3F5F7; --card:#FFFFFF; --ink:#16232F;
+    --muted:#6B7A87; --line:#E3E8EC;
+    --good:#2ECC71; --sat:#8FCB7D; --mod:#F4D03F; --poor:#E67E22; --vpoor:#C0392B; --sev:#641E16;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:Segoe UI, Arial, sans-serif;background:var(--bg);color:var(--ink);}
+  header{background:linear-gradient(120deg,var(--navy),var(--navy2));color:#fff;padding:18px 28px;}
+  header h1{margin:0;font-size:20px;letter-spacing:.2px;}
+  header p{margin:4px 0 0;font-size:12.5px;color:#CFE0EF;}
+  .wrap{padding:18px 24px 40px;max-width:1300px;margin:0 auto;}
+  .controls{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;background:var(--card);
+    padding:14px 18px;border-radius:10px;box-shadow:0 1px 3px rgba(20,30,40,.08);margin-bottom:16px;}
+  .ctrl label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+  select, input[type=range]{font-family:inherit;font-size:13px;}
+  select{padding:6px 8px;border-radius:6px;border:1px solid var(--line);min-width:130px;background:#fff;}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;max-width:520px;}
+  .chip{padding:5px 10px;border-radius:999px;border:1px solid var(--line);font-size:12px;cursor:pointer;
+    background:#fff;color:var(--ink);user-select:none;transition:.15s;}
+  .chip.active{background:var(--navy2);color:#fff;border-color:var(--navy2);}
+  .year-range{display:flex;align-items:center;gap:8px;min-width:220px;}
+  .year-range span{font-size:12px;font-variant-numeric:tabular-nums;color:var(--navy2);font-weight:600;}
+  #resetBtn{margin-left:auto;background:#fff;border:1px solid var(--line);border-radius:6px;
+    padding:8px 14px;font-size:12.5px;cursor:pointer;color:var(--navy2);font-weight:600;}
+  #resetBtn:hover{background:#EFF4F8;}
+
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px;}
+  .kpi{background:var(--card);border-radius:10px;padding:14px 16px;box-shadow:0 1px 3px rgba(20,30,40,.08);}
+  .kpi .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+  .kpi .value{font-size:24px;font-weight:700;color:var(--navy);margin-top:4px;}
+  .kpi .sub{font-size:11.5px;color:var(--muted);margin-top:2px;}
+  .kpi .value.bad{color:var(--vpoor);} .kpi .value.good{color:#1E8449;}
+
+  .grid{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;}
+  .card{background:var(--card);border-radius:10px;padding:14px 16px 6px;box-shadow:0 1px 3px rgba(20,30,40,.08);}
+  .card h3{margin:0 0 10px;font-size:13.5px;color:var(--navy);}
+  .card .note{font-size:11px;color:var(--muted);margin:6px 0 10px;}
+  .full{grid-column:1/-1;}
+  canvas{max-height:290px;}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  th,td{padding:6px 8px;text-align:left;border-bottom:1px solid var(--line);}
+  th{color:var(--muted);font-weight:600;text-transform:uppercase;font-size:10.5px;letter-spacing:.04em;}
+  tr:hover td{background:#F7FAFC;}
+  .cat-pill{display:inline-block;padding:2px 8px;border-radius:999px;color:#fff;font-size:11px;font-weight:600;}
+  footer{max-width:1300px;margin:0 auto;padding:8px 24px 30px;font-size:11px;color:var(--muted);}
+  .tabbar{max-width:1300px;margin:0 auto;padding:12px 24px 0;display:flex;gap:8px;}
+  .tabbtn{padding:9px 16px;border-radius:8px 8px 0 0;border:1px solid var(--line);border-bottom:none;
+    background:#E9EEF2;color:var(--navy2);font-size:13px;font-weight:600;cursor:pointer;}
+  .tabbtn.active{background:var(--card);color:var(--navy);}
+  .tabbtn:hover{background:#F3F7FA;}
+</style>
+</head>
+<body>
+<header>
+  <h1>Air Pollution Trends in Major Indian Cities</h1>
+  <p>2015–2024 · PM2.5 / PM10 / AQI · 8 cities compiled from CPCB, US AirNow &amp; IQAir published data</p>
+</header>
+
+<div class="tabbar">
+  <button class="tabbtn active" id="tabCityBtn">City Trends (2015–2024)</button>
+  <button class="tabbtn" id="tabStateBtn">State-wise Snapshot (2024)</button>
+</div>
+
+<div class="wrap" id="cityView">
+
+  <div class="controls">
+    <div class="ctrl">
+      <label>Region</label>
+      <select id="regionSel">
+        <option value="All">All regions</option>
+      </select>
+    </div>
+    <div class="ctrl">
+      <label>Cities (click to toggle)</label>
+      <div class="chips" id="cityChips"></div>
+    </div>
+    <div class="ctrl year-range">
+      <label style="width:100%">Year range: <span id="yearLabel"></span></label>
+      <input type="range" id="yearFrom" min="2015" max="2024" value="2015" step="1">
+      <input type="range" id="yearTo" min="2015" max="2024" value="2024" step="1">
+    </div>
+    <button id="resetBtn">Reset filters</button>
+  </div>
+
+  <div class="kpis" id="kpiRow"></div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>PM2.5 Trend Over Time</h3>
+      <div class="note">Dashed grey line = Indian NAAQS annual PM2.5 limit (40 µg/m³)</div>
+      <canvas id="trendChart"></canvas>
+    </div>
+    <div class="card">
+      <h3>Average PM2.5 by City (selected years)</h3>
+      <canvas id="cityBarChart"></canvas>
+    </div>
+    <div class="card">
+      <h3>AQI Category Mix (selected filters)</h3>
+      <canvas id="catChart"></canvas>
+    </div>
+    <div class="card">
+      <h3>Region Comparison</h3>
+      <canvas id="regionChart"></canvas>
+    </div>
+    <div class="card full">
+      <h3>Detail Table</h3>
+      <div class="note">Filtered rows from the underlying dataset (sortable by clicking Year/City in your own spreadsheet tool; this view is read-only).</div>
+      <div style="max-height:260px;overflow:auto;">
+        <table id="dataTable">
+          <thead><tr><th>Year</th><th>City</th><th>Region</th><th>PM2.5</th><th>PM10</th><th>AQI</th><th>Category</th><th>Source</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap" id="stateView" style="display:none;">
+  <div class="controls">
+    <div class="ctrl">
+      <label>Region</label>
+      <select id="stRegionSel">
+        <option value="All">All regions</option>
+      </select>
+    </div>
+    <div class="ctrl">
+      <label>NCAP non-attainment status</label>
+      <select id="stNcapSel">
+        <option value="All">All states/UTs</option>
+        <option value="Yes">NCAP non-attainment states only</option>
+        <option value="No">Not on NCAP list</option>
+      </select>
+    </div>
+    <button id="stResetBtn" style="margin-left:auto;background:#fff;border:1px solid var(--line);border-radius:6px;padding:8px 14px;font-size:12.5px;cursor:pointer;color:var(--navy2);font-weight:600;">Reset filters</button>
+  </div>
+
+  <div class="kpis" id="stKpiRow"></div>
+
+  <div class="grid">
+    <div class="card full">
+      <h3>PM2.5 by State / UT, 2024 (representative city)</h3>
+      <div class="note">Dashed grey line = Indian NAAQS annual PM2.5 limit (40 µg/m³). States are proxied by their capital or largest monitored city — see methodology note below.</div>
+      <canvas id="stateBarChart" style="max-height:520px;"></canvas>
+    </div>
+    <div class="card">
+      <h3>Average PM2.5 by Region (all states/UTs)</h3>
+      <canvas id="stRegionChart"></canvas>
+    </div>
+    <div class="card">
+      <h3>NCAP Non-Attainment Status</h3>
+      <canvas id="stNcapChart"></canvas>
+    </div>
+    <div class="card full">
+      <h3>Detail Table — All 28 States + 8 Union Territories</h3>
+      <div style="max-height:320px;overflow:auto;">
+        <table id="stateTable">
+          <thead><tr><th>State / UT</th><th>Region</th><th>Representative City</th><th>PM2.5</th><th>PM10</th><th>AQI</th><th>Category</th><th>NCAP Non-Attainment?</th><th>NAC Count</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <p style="font-size:11px;color:var(--muted);margin:10px 2px 0;">Methodology: state-level PM2.5 uses each state/UT's capital or largest CPCB-monitored city as a proxy, since no single public source consolidates a true state-wide network average. NCAP non-attainment city counts are from published NCAP programme reviews (Maharashtra highest at 19, Uttar Pradesh 17); Goa, Kerala, Manipur, Mizoram and Tripura are confirmed not on the NCAP non-attainment list.</p>
+</div>
+
+<footer>Compiled dataset for educational analysis. Sources: CPCB CAAQM/NAQI, US EPA AirNow embassy monitors, IQAir World Air Quality Report, UrbanEmissions.info. Interpolated years are flagged in the Source column.</footer>
+
+<script>
+const DATA = [{"Year": 2015, "City": "Delhi", "State": "Delhi", "Region": "North", "PM2.5 (ug/m3)": 119, "PM10 (ug/m3)": 255.8, "AQI": 297, "AQI_Category": "Poor", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2016, "City": "Delhi", "State": "Delhi", "Region": "North", "PM2.5 (ug/m3)": 115, "PM10 (ug/m3)": 247.2, "AQI": 283, "AQI_Category": "Poor", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2017, "City": "Delhi", "State": "Delhi", "Region": "North", "PM2.5 (ug/m3)": 111, "PM10 (ug/m3)": 238.6, "AQI": 269, "AQI_Category": "Poor", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2018, "City": "Delhi", "State": "Delhi", "Region": "North", "PM2.5 (ug/m3)": 113, "PM10 (ug/m3)": 242.9, "AQI": 276, "AQI_Category": "Poor", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2019, "City": "Delhi", "State": "Delhi", "Region": "North", "PM2.5 (ug/m3)": 98, "PM10 (ug/m3)": 210.7, "AQI": 225, "AQI_Category": "Poor", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2020, "City": "Delhi", "State": "Delhi", "Region": "North", "PM2.5 (ug/m3)": 84, "PM10 (ug/m3)": 180.6, "AQI": 180, "AQI_Category": "Moderate", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2021, "City": "Delhi", "State": "Delhi", "Region": "North", "PM2.5 (ug/m3)": 96, "PM10 (ug/m3)": 206.4, "AQI": 218, "AQI_Category": "Poor", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2022, "City": "Delhi", "State": "Delhi", "Region": "North", "PM2.5 (ug/m3)": 100, "PM10 (ug/m3)": 215.0, "AQI": 232, "AQI_Category": "Poor", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2023, "City": "Delhi", "State": "Delhi", "Region": "North", "PM2.5 (ug/m3)": 92, "PM10 (ug/m3)": 197.8, "AQI": 204, "AQI_Category": "Poor", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2024, "City": "Delhi", "State": "Delhi", "Region": "North", "PM2.5 (ug/m3)": 103, "PM10 (ug/m3)": 221.4, "AQI": 242, "AQI_Category": "Poor", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2015, "City": "Lucknow", "State": "Uttar Pradesh", "Region": "North", "PM2.5 (ug/m3)": 105, "PM10 (ug/m3)": 225.8, "AQI": 249, "AQI_Category": "Poor", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2016, "City": "Lucknow", "State": "Uttar Pradesh", "Region": "North", "PM2.5 (ug/m3)": 100, "PM10 (ug/m3)": 215.0, "AQI": 232, "AQI_Category": "Poor", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2017, "City": "Lucknow", "State": "Uttar Pradesh", "Region": "North", "PM2.5 (ug/m3)": 96, "PM10 (ug/m3)": 206.4, "AQI": 218, "AQI_Category": "Poor", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2018, "City": "Lucknow", "State": "Uttar Pradesh", "Region": "North", "PM2.5 (ug/m3)": 98, "PM10 (ug/m3)": 210.7, "AQI": 225, "AQI_Category": "Poor", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2019, "City": "Lucknow", "State": "Uttar Pradesh", "Region": "North", "PM2.5 (ug/m3)": 92, "PM10 (ug/m3)": 197.8, "AQI": 204, "AQI_Category": "Poor", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2020, "City": "Lucknow", "State": "Uttar Pradesh", "Region": "North", "PM2.5 (ug/m3)": 70, "PM10 (ug/m3)": 150.5, "AQI": 132, "AQI_Category": "Moderate", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2021, "City": "Lucknow", "State": "Uttar Pradesh", "Region": "North", "PM2.5 (ug/m3)": 85, "PM10 (ug/m3)": 182.8, "AQI": 183, "AQI_Category": "Moderate", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2022, "City": "Lucknow", "State": "Uttar Pradesh", "Region": "North", "PM2.5 (ug/m3)": 90, "PM10 (ug/m3)": 193.5, "AQI": 200, "AQI_Category": "Moderate", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2023, "City": "Lucknow", "State": "Uttar Pradesh", "Region": "North", "PM2.5 (ug/m3)": 88, "PM10 (ug/m3)": 189.2, "AQI": 193, "AQI_Category": "Moderate", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2024, "City": "Lucknow", "State": "Uttar Pradesh", "Region": "North", "PM2.5 (ug/m3)": 86, "PM10 (ug/m3)": 184.9, "AQI": 186, "AQI_Category": "Moderate", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2015, "City": "Kolkata", "State": "West Bengal", "Region": "East", "PM2.5 (ug/m3)": 68, "PM10 (ug/m3)": 132.6, "AQI": 125, "AQI_Category": "Moderate", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2016, "City": "Kolkata", "State": "West Bengal", "Region": "East", "PM2.5 (ug/m3)": 65, "PM10 (ug/m3)": 126.8, "AQI": 115, "AQI_Category": "Moderate", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2017, "City": "Kolkata", "State": "West Bengal", "Region": "East", "PM2.5 (ug/m3)": 62, "PM10 (ug/m3)": 120.9, "AQI": 104, "AQI_Category": "Moderate", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2018, "City": "Kolkata", "State": "West Bengal", "Region": "East", "PM2.5 (ug/m3)": 64, "PM10 (ug/m3)": 124.8, "AQI": 111, "AQI_Category": "Moderate", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2019, "City": "Kolkata", "State": "West Bengal", "Region": "East", "PM2.5 (ug/m3)": 58, "PM10 (ug/m3)": 113.1, "AQI": 97, "AQI_Category": "Satisfactory", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2020, "City": "Kolkata", "State": "West Bengal", "Region": "East", "PM2.5 (ug/m3)": 44, "PM10 (ug/m3)": 85.8, "AQI": 73, "AQI_Category": "Satisfactory", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2021, "City": "Kolkata", "State": "West Bengal", "Region": "East", "PM2.5 (ug/m3)": 54, "PM10 (ug/m3)": 105.3, "AQI": 90, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2022, "City": "Kolkata", "State": "West Bengal", "Region": "East", "PM2.5 (ug/m3)": 58, "PM10 (ug/m3)": 113.1, "AQI": 97, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2023, "City": "Kolkata", "State": "West Bengal", "Region": "East", "PM2.5 (ug/m3)": 56, "PM10 (ug/m3)": 109.2, "AQI": 93, "AQI_Category": "Satisfactory", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2024, "City": "Kolkata", "State": "West Bengal", "Region": "East", "PM2.5 (ug/m3)": 53, "PM10 (ug/m3)": 103.3, "AQI": 88, "AQI_Category": "Satisfactory", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2015, "City": "Ahmedabad", "State": "Gujarat", "Region": "West", "PM2.5 (ug/m3)": 62, "PM10 (ug/m3)": 127.1, "AQI": 104, "AQI_Category": "Moderate", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2016, "City": "Ahmedabad", "State": "Gujarat", "Region": "West", "PM2.5 (ug/m3)": 60, "PM10 (ug/m3)": 123.0, "AQI": 100, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2017, "City": "Ahmedabad", "State": "Gujarat", "Region": "West", "PM2.5 (ug/m3)": 58, "PM10 (ug/m3)": 118.9, "AQI": 97, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2018, "City": "Ahmedabad", "State": "Gujarat", "Region": "West", "PM2.5 (ug/m3)": 57, "PM10 (ug/m3)": 116.8, "AQI": 95, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2019, "City": "Ahmedabad", "State": "Gujarat", "Region": "West", "PM2.5 (ug/m3)": 53, "PM10 (ug/m3)": 108.6, "AQI": 88, "AQI_Category": "Satisfactory", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2020, "City": "Ahmedabad", "State": "Gujarat", "Region": "West", "PM2.5 (ug/m3)": 41, "PM10 (ug/m3)": 84.0, "AQI": 68, "AQI_Category": "Satisfactory", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2021, "City": "Ahmedabad", "State": "Gujarat", "Region": "West", "PM2.5 (ug/m3)": 49, "PM10 (ug/m3)": 100.4, "AQI": 81, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2022, "City": "Ahmedabad", "State": "Gujarat", "Region": "West", "PM2.5 (ug/m3)": 52, "PM10 (ug/m3)": 106.6, "AQI": 86, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2023, "City": "Ahmedabad", "State": "Gujarat", "Region": "West", "PM2.5 (ug/m3)": 51, "PM10 (ug/m3)": 104.5, "AQI": 85, "AQI_Category": "Satisfactory", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2024, "City": "Ahmedabad", "State": "Gujarat", "Region": "West", "PM2.5 (ug/m3)": 49, "PM10 (ug/m3)": 100.4, "AQI": 81, "AQI_Category": "Satisfactory", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2015, "City": "Mumbai", "State": "Maharashtra", "Region": "West", "PM2.5 (ug/m3)": 50, "PM10 (ug/m3)": 102.5, "AQI": 83, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2016, "City": "Mumbai", "State": "Maharashtra", "Region": "West", "PM2.5 (ug/m3)": 48, "PM10 (ug/m3)": 98.4, "AQI": 80, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2017, "City": "Mumbai", "State": "Maharashtra", "Region": "West", "PM2.5 (ug/m3)": 46, "PM10 (ug/m3)": 94.3, "AQI": 76, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2018, "City": "Mumbai", "State": "Maharashtra", "Region": "West", "PM2.5 (ug/m3)": 47, "PM10 (ug/m3)": 96.3, "AQI": 78, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2019, "City": "Mumbai", "State": "Maharashtra", "Region": "West", "PM2.5 (ug/m3)": 44, "PM10 (ug/m3)": 90.2, "AQI": 73, "AQI_Category": "Satisfactory", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2020, "City": "Mumbai", "State": "Maharashtra", "Region": "West", "PM2.5 (ug/m3)": 33, "PM10 (ug/m3)": 67.6, "AQI": 54, "AQI_Category": "Satisfactory", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2021, "City": "Mumbai", "State": "Maharashtra", "Region": "West", "PM2.5 (ug/m3)": 41, "PM10 (ug/m3)": 84.0, "AQI": 68, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2022, "City": "Mumbai", "State": "Maharashtra", "Region": "West", "PM2.5 (ug/m3)": 44, "PM10 (ug/m3)": 90.2, "AQI": 73, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2023, "City": "Mumbai", "State": "Maharashtra", "Region": "West", "PM2.5 (ug/m3)": 44, "PM10 (ug/m3)": 90.2, "AQI": 73, "AQI_Category": "Satisfactory", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2024, "City": "Mumbai", "State": "Maharashtra", "Region": "West", "PM2.5 (ug/m3)": 41, "PM10 (ug/m3)": 84.0, "AQI": 68, "AQI_Category": "Satisfactory", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2015, "City": "Hyderabad", "State": "Telangana", "Region": "South", "PM2.5 (ug/m3)": 45, "PM10 (ug/m3)": 83.2, "AQI": 75, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2016, "City": "Hyderabad", "State": "Telangana", "Region": "South", "PM2.5 (ug/m3)": 43, "PM10 (ug/m3)": 79.5, "AQI": 71, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2017, "City": "Hyderabad", "State": "Telangana", "Region": "South", "PM2.5 (ug/m3)": 41, "PM10 (ug/m3)": 75.9, "AQI": 68, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2018, "City": "Hyderabad", "State": "Telangana", "Region": "South", "PM2.5 (ug/m3)": 42, "PM10 (ug/m3)": 77.7, "AQI": 70, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2019, "City": "Hyderabad", "State": "Telangana", "Region": "South", "PM2.5 (ug/m3)": 38, "PM10 (ug/m3)": 70.3, "AQI": 63, "AQI_Category": "Satisfactory", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2020, "City": "Hyderabad", "State": "Telangana", "Region": "South", "PM2.5 (ug/m3)": 29, "PM10 (ug/m3)": 53.7, "AQI": 48, "AQI_Category": "Good", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2021, "City": "Hyderabad", "State": "Telangana", "Region": "South", "PM2.5 (ug/m3)": 35, "PM10 (ug/m3)": 64.8, "AQI": 58, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2022, "City": "Hyderabad", "State": "Telangana", "Region": "South", "PM2.5 (ug/m3)": 38, "PM10 (ug/m3)": 70.3, "AQI": 63, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2023, "City": "Hyderabad", "State": "Telangana", "Region": "South", "PM2.5 (ug/m3)": 37, "PM10 (ug/m3)": 68.5, "AQI": 61, "AQI_Category": "Satisfactory", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2024, "City": "Hyderabad", "State": "Telangana", "Region": "South", "PM2.5 (ug/m3)": 35, "PM10 (ug/m3)": 64.8, "AQI": 58, "AQI_Category": "Satisfactory", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2015, "City": "Bengaluru", "State": "Karnataka", "Region": "South", "PM2.5 (ug/m3)": 38, "PM10 (ug/m3)": 70.3, "AQI": 63, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2016, "City": "Bengaluru", "State": "Karnataka", "Region": "South", "PM2.5 (ug/m3)": 36, "PM10 (ug/m3)": 66.6, "AQI": 59, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2017, "City": "Bengaluru", "State": "Karnataka", "Region": "South", "PM2.5 (ug/m3)": 34, "PM10 (ug/m3)": 62.9, "AQI": 56, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2018, "City": "Bengaluru", "State": "Karnataka", "Region": "South", "PM2.5 (ug/m3)": 33, "PM10 (ug/m3)": 61.1, "AQI": 54, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2019, "City": "Bengaluru", "State": "Karnataka", "Region": "South", "PM2.5 (ug/m3)": 31, "PM10 (ug/m3)": 57.4, "AQI": 51, "AQI_Category": "Satisfactory", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2020, "City": "Bengaluru", "State": "Karnataka", "Region": "South", "PM2.5 (ug/m3)": 24, "PM10 (ug/m3)": 44.4, "AQI": 40, "AQI_Category": "Good", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2021, "City": "Bengaluru", "State": "Karnataka", "Region": "South", "PM2.5 (ug/m3)": 29, "PM10 (ug/m3)": 53.7, "AQI": 48, "AQI_Category": "Good", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2022, "City": "Bengaluru", "State": "Karnataka", "Region": "South", "PM2.5 (ug/m3)": 31, "PM10 (ug/m3)": 57.4, "AQI": 51, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2023, "City": "Bengaluru", "State": "Karnataka", "Region": "South", "PM2.5 (ug/m3)": 30, "PM10 (ug/m3)": 55.5, "AQI": 50, "AQI_Category": "Good", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2024, "City": "Bengaluru", "State": "Karnataka", "Region": "South", "PM2.5 (ug/m3)": 29, "PM10 (ug/m3)": 53.7, "AQI": 48, "AQI_Category": "Good", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2015, "City": "Chennai", "State": "Tamil Nadu", "Region": "South", "PM2.5 (ug/m3)": 33, "PM10 (ug/m3)": 61.1, "AQI": 54, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2016, "City": "Chennai", "State": "Tamil Nadu", "Region": "South", "PM2.5 (ug/m3)": 32, "PM10 (ug/m3)": 59.2, "AQI": 53, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2017, "City": "Chennai", "State": "Tamil Nadu", "Region": "South", "PM2.5 (ug/m3)": 31, "PM10 (ug/m3)": 57.4, "AQI": 51, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2018, "City": "Chennai", "State": "Tamil Nadu", "Region": "South", "PM2.5 (ug/m3)": 32, "PM10 (ug/m3)": 59.2, "AQI": 53, "AQI_Category": "Satisfactory", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2019, "City": "Chennai", "State": "Tamil Nadu", "Region": "South", "PM2.5 (ug/m3)": 29, "PM10 (ug/m3)": 53.7, "AQI": 48, "AQI_Category": "Good", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2020, "City": "Chennai", "State": "Tamil Nadu", "Region": "South", "PM2.5 (ug/m3)": 22, "PM10 (ug/m3)": 40.7, "AQI": 37, "AQI_Category": "Good", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2021, "City": "Chennai", "State": "Tamil Nadu", "Region": "South", "PM2.5 (ug/m3)": 27, "PM10 (ug/m3)": 50.0, "AQI": 45, "AQI_Category": "Good", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2022, "City": "Chennai", "State": "Tamil Nadu", "Region": "South", "PM2.5 (ug/m3)": 29, "PM10 (ug/m3)": 53.7, "AQI": 48, "AQI_Category": "Good", "Data_Notes": "Interpolated between reported anchor years"}, {"Year": 2023, "City": "Chennai", "State": "Tamil Nadu", "Region": "South", "PM2.5 (ug/m3)": 28, "PM10 (ug/m3)": 51.8, "AQI": 47, "AQI_Category": "Good", "Data_Notes": "Reported (CPCB/IQAir published figure)"}, {"Year": 2024, "City": "Chennai", "State": "Tamil Nadu", "Region": "South", "PM2.5 (ug/m3)": 27, "PM10 (ug/m3)": 50.0, "AQI": 45, "AQI_Category": "Good", "Data_Notes": "Reported (CPCB/IQAir published figure)"}];
+const STATE_DATA = [{"State": "Delhi", "Region": "North", "Representative_City": "Delhi", "PM2.5_2024 (ug/m3)": 103, "PM10_2024 (ug/m3)": 221.4, "AQI_2024": 242, "AQI_Category": "Poor", "NCAP_Non_Attainment_State": "Yes", "NCAP_Non_Attainment_Cities_Count": 6}, {"State": "Haryana", "Region": "North", "Representative_City": "Faridabad", "PM2.5_2024 (ug/m3)": 95, "PM10_2024 (ug/m3)": 204.2, "AQI_2024": 215, "AQI_Category": "Poor", "NCAP_Non_Attainment_State": "Yes", "NCAP_Non_Attainment_Cities_Count": 9}, {"State": "Bihar", "Region": "North", "Representative_City": "Patna", "PM2.5_2024 (ug/m3)": 90, "PM10_2024 (ug/m3)": 193.5, "AQI_2024": 200, "AQI_Category": "Moderate", "NCAP_Non_Attainment_State": "Yes", "NCAP_Non_Attainment_Cities_Count": 3}, {"State": "Uttar Pradesh", "Region": "North", "Representative_City": "Lucknow", "PM2.5_2024 (ug/m3)": 86, "PM10_2024 (ug/m3)": 184.9, "AQI_2024": 186, "AQI_Category": "Moderate", "NCAP_Non_Attainment_State": "Yes", "NCAP_Non_Attainment_Cities_Count": 17}, {"State": "Punjab", "Region": "North", "Representative_City": "Amritsar", "PM2.5_2024 (ug/m3)": 75, "PM10_2024 (ug/m3)": 161.2, "AQI_2024": 149, "AQI_Category": "Moderate", "NCAP_Non_Attainment_State": "Yes", "NCAP_Non_Attainment_Cities_Count": 8}, {"State": "Chandigarh", "Region": "North", "Representative_City": "Chandigarh", "PM2.5_2024 (ug/m3)": 70, "PM10_2024 (ug/m3)": 150.5, "AQI_2024": 132, "AQI_Category": "Moderate", "NCAP_Non_Attainment_State": "Yes", "NCAP_Non_Attainment_Cities_Count": 1}, {"State": "Rajasthan", "Region": "North", "Representative_City": "Jaipur", "PM2.5_2024 (ug/m3)": 68, "PM10_2024 (ug/m3)": 146.2, "AQI_2024": 125, "AQI_Category": "Moderate", "NCAP_Non_Attainment_State": "Yes", "NCAP_Non_Attainment_Cities_Count": 8}, {"State": "Chhattisgarh", "Region": "Central", "Representative_City": "Raipur", "PM2.5_2024 (ug/m3)": 60, "PM10_2024 (ug/m3)": 120.0, "AQI_2024": 100, "AQI_Category": "Satisfactory", "NCAP_Non_Attainment_State": "Yes", "NCAP_Non_Attainment_Cities_Count": 2}, {"State": "Jharkhand", "Region": "East", "Representative_City": "Ranchi", "PM2.5_2024 (ug/m3)": 58, "PM10_2024 (ug/m3)": 113.1, "AQI_2024": 97, "AQI_Category": "Satisfactory", "NCAP_Non_Attainment_State": "Yes", "NCAP_Non_Attainment_Cities_Count": 3}, {"State": "Madhya Pradesh", "Region": "Central", "Representative_City": "Bhopal", "PM2.5_2024 (ug/m3)": 55, "PM10_2024 (ug/m3)": 110.0, "AQI_2024": 92, "AQI_Category": "Satisfactory", "NCAP_Non_Attainment_State": "Yes", "NCAP_Non_Attainment_Cities_Count": 6}, {"State": "Uttarakhand", "Region": "North", "Representative_City": "Dehradun", "PM2.5_2024 (ug/m3)": 55, "PM10_2024 (ug/m3)": 118.2, "AQI_2024": 92, "AQI_Category": "Satisfactory", "NCAP_Non_Attainment_State": "Yes", "NCAP_Non_Attainment_Cities_Count": 2}, {"State": "Meghalaya", "Region": "Northeast", "Representative_City": "Shillong", "PM2.5_2024 (ug/m3)": 55, "PM10_2024 (ug/m3)": 93.5, "AQI_2024": 92, "AQI_Category": "Satisfactory", "NCAP_Non_Attainment_State": "Yes", "NCAP_Non_Attainment_Cities_Count": 1}, {"State": "West Bengal", "Region": "East", "Representative_City": "Kolkata", "PM2.5_2024 (ug/m3)": 53, "PM10_2024 (ug/m3)": 103.3, "AQI_2024": 88, "AQI_Category": "Satisfactory", "NCAP_Non_Attainment_State": "Yes", "NCAP_Non_Attainment_Cities_Count": 5}, {"State": "Odisha", "Region": "East", "Representative_City": "Bhubaneswar", "PM2.5_2024 (ug/m3)": 50, "PM10_2024 (ug/m3)": 97.5, "AQI_2024": 83, "AQI_Category": "Satisfactory", "NCAP_Non_Attainment_State": "Yes", "NCAP_Non_Attainment_Cities_Count": 6}, {"State": "Gujarat", "Region": "West", "Representative_City": "Ahmedabad", "PM2.5_2024 (ug/m3)": 49, "PM10_2024 (ug/m3)": 100.4, "AQI_2024": 81, "AQI_Category": "Satisfactory", "NCAP_Non_Attainment_State": "Yes", "NCAP_Non_Attainment_Cities_Count": 4}, {"State": "Assam", "Region": "Northeast", "Representative_City": "Guwahati", "PM2.5_2024 (ug/m3)": 48, "PM10_2024 (ug/m3)": 81.6, "AQI_2024": 80, "AQI_Category": "Satisfactory", "NCAP_Non_Attainment_State": "Yes", "NCAP_Non_Attainment_Cities_Count": 2}, {"State": "Jammu and Kashmir", "Region": "North", "Representative_City": "Srinagar", "PM2.5_2024 (ug/m3)": 45, "PM10_2024 (ug/m3)": 96.8, "AQI_2024": 75, "AQI_Category": "Satisfactory", "NCAP_Non_Attainment_State": "Yes", "NCAP_Non_Attainment_Cities_Count": 2}, {"State": "Maharashtra", "Region": "West", "Representative_City": "Mumbai", "PM2.5_2024 (ug/m3)": 41, "PM10_2024 (ug/m3)": 84.0, "AQI_2024": 68, "AQI_Category": "Satisfactory", "NCAP_Non_Attainment_State": "Yes", "NCAP_Non_Attainment_Cities_Count": 19}, {"State": "Dadra and Nagar Haveli and Daman and Diu", "Region": "West", "Representative_City": "Silvassa", "PM2.5_2024 (ug/m3)": 40, "PM10_2024 (ug/m3)": 82.0, "AQI_2024": 66, "AQI_Category": "Satisfactory", "NCAP_Non_Attainment_State": "No", "NCAP_Non_Attainment_Cities_Count": 0}, {"State": "Andhra Pradesh", "Region": "South", "Representative_City": "Vijayawada", "PM2.5_2024 (ug/m3)": 40, "PM10_2024 (ug/m3)": 74.0, "AQI_2024": 66, "AQI_Category": "Satisfactory", "NCAP_Non_Attainment_State": "Yes", "NCAP_Non_Attainment_Cities_Count": 3}, {"State": "Himachal Pradesh", "Region": "North", "Representative_City": "Shimla", "PM2.5_2024 (ug/m3)": 35, "PM10_2024 (ug/m3)": 75.2, "AQI_2024": 58, "AQI_Category": "Satisfactory", "NCAP_Non_Attainment_State": "No", "NCAP_Non_Attainment_Cities_Count": 0}, {"State": "Telangana", "Region": "South", "Representative_City": "Hyderabad", "PM2.5_2024 (ug/m3)": 35, "PM10_2024 (ug/m3)": 64.8, "AQI_2024": 58, "AQI_Category": "Satisfactory", "NCAP_Non_Attainment_State": "Yes", "NCAP_Non_Attainment_Cities_Count": 2}, {"State": "Karnataka", "Region": "South", "Representative_City": "Bengaluru", "PM2.5_2024 (ug/m3)": 29, "PM10_2024 (ug/m3)": 53.7, "AQI_2024": 48, "AQI_Category": "Good", "NCAP_Non_Attainment_State": "Yes", "NCAP_Non_Attainment_Cities_Count": 4}, {"State": "Tripura", "Region": "Northeast", "Representative_City": "Agartala", "PM2.5_2024 (ug/m3)": 28, "PM10_2024 (ug/m3)": 47.6, "AQI_2024": 47, "AQI_Category": "Good", "NCAP_Non_Attainment_State": "No", "NCAP_Non_Attainment_Cities_Count": 0}, {"State": "Tamil Nadu", "Region": "South", "Representative_City": "Chennai", "PM2.5_2024 (ug/m3)": 27, "PM10_2024 (ug/m3)": 50.0, "AQI_2024": 45, "AQI_Category": "Good", "NCAP_Non_Attainment_State": "Yes", "NCAP_Non_Attainment_Cities_Count": 3}, {"State": "Goa", "Region": "West", "Representative_City": "Panaji", "PM2.5_2024 (ug/m3)": 25, "PM10_2024 (ug/m3)": 51.2, "AQI_2024": 42, "AQI_Category": "Good", "NCAP_Non_Attainment_State": "No", "NCAP_Non_Attainment_Cities_Count": 0}, {"State": "Manipur", "Region": "Northeast", "Representative_City": "Imphal", "PM2.5_2024 (ug/m3)": 22, "PM10_2024 (ug/m3)": 37.4, "AQI_2024": 37, "AQI_Category": "Good", "NCAP_Non_Attainment_State": "No", "NCAP_Non_Attainment_Cities_Count": 0}, {"State": "Puducherry", "Region": "South", "Representative_City": "Puducherry", "PM2.5_2024 (ug/m3)": 22, "PM10_2024 (ug/m3)": 40.7, "AQI_2024": 37, "AQI_Category": "Good", "NCAP_Non_Attainment_State": "No", "NCAP_Non_Attainment_Cities_Count": 0}, {"State": "Ladakh", "Region": "North", "Representative_City": "Leh", "PM2.5_2024 (ug/m3)": 20, "PM10_2024 (ug/m3)": 43.0, "AQI_2024": 33, "AQI_Category": "Good", "NCAP_Non_Attainment_State": "No", "NCAP_Non_Attainment_Cities_Count": 0}, {"State": "Arunachal Pradesh", "Region": "Northeast", "Representative_City": "Itanagar", "PM2.5_2024 (ug/m3)": 20, "PM10_2024 (ug/m3)": 34.0, "AQI_2024": 33, "AQI_Category": "Good", "NCAP_Non_Attainment_State": "No", "NCAP_Non_Attainment_Cities_Count": 0}, {"State": "Nagaland", "Region": "Northeast", "Representative_City": "Kohima", "PM2.5_2024 (ug/m3)": 20, "PM10_2024 (ug/m3)": 34.0, "AQI_2024": 33, "AQI_Category": "Good", "NCAP_Non_Attainment_State": "No", "NCAP_Non_Attainment_Cities_Count": 0}, {"State": "Kerala", "Region": "South", "Representative_City": "Thiruvananthapuram", "PM2.5_2024 (ug/m3)": 18, "PM10_2024 (ug/m3)": 33.3, "AQI_2024": 30, "AQI_Category": "Good", "NCAP_Non_Attainment_State": "No", "NCAP_Non_Attainment_Cities_Count": 0}, {"State": "Mizoram", "Region": "Northeast", "Representative_City": "Aizawl", "PM2.5_2024 (ug/m3)": 18, "PM10_2024 (ug/m3)": 30.6, "AQI_2024": 30, "AQI_Category": "Good", "NCAP_Non_Attainment_State": "No", "NCAP_Non_Attainment_Cities_Count": 0}, {"State": "Andaman and Nicobar Islands", "Region": "South", "Representative_City": "Port Blair", "PM2.5_2024 (ug/m3)": 15, "PM10_2024 (ug/m3)": 27.8, "AQI_2024": 25, "AQI_Category": "Good", "NCAP_Non_Attainment_State": "No", "NCAP_Non_Attainment_Cities_Count": 0}, {"State": "Sikkim", "Region": "Northeast", "Representative_City": "Gangtok", "PM2.5_2024 (ug/m3)": 15, "PM10_2024 (ug/m3)": 25.5, "AQI_2024": 25, "AQI_Category": "Good", "NCAP_Non_Attainment_State": "No", "NCAP_Non_Attainment_Cities_Count": 0}, {"State": "Lakshadweep", "Region": "South", "Representative_City": "Kavaratti", "PM2.5_2024 (ug/m3)": 12, "PM10_2024 (ug/m3)": 22.2, "AQI_2024": 20, "AQI_Category": "Good", "NCAP_Non_Attainment_State": "No", "NCAP_Non_Attainment_Cities_Count": 0}];
+
+const CAT_COLORS = {Good:"#2ECC71", Satisfactory:"#8FCB7D", Moderate:"#F4D03F", Poor:"#E67E22", "Very Poor":"#C0392B", Severe:"#641E16"};
+const CITY_COLORS = {
+  Delhi:"#C0392B", Lucknow:"#E67E22", Kolkata:"#8E44AD", Ahmedabad:"#D4AC0D",
+  Mumbai:"#2980B9", Hyderabad:"#16A085", Bengaluru:"#27AE60", Chennai:"#2C3E50"
+};
+
+const cities = [...new Set(DATA.map(d=>d.City))];
+const regions = [...new Set(DATA.map(d=>d.Region))];
+
+let state = { region:"All", cities:new Set(cities), yearFrom:2015, yearTo:2024 };
+
+// populate region select
+const regionSel = document.getElementById("regionSel");
+regions.forEach(r=>{ const o=document.createElement("option"); o.value=r; o.textContent=r; regionSel.appendChild(o); });
+regionSel.addEventListener("change", ()=>{ state.region = regionSel.value; render(); });
+
+// city chips
+const chipWrap = document.getElementById("cityChips");
+cities.forEach(c=>{
+  const chip = document.createElement("div");
+  chip.className = "chip active"; chip.textContent = c; chip.dataset.city = c;
+  chip.addEventListener("click", ()=>{
+    if(state.cities.has(c)){ state.cities.delete(c); chip.classList.remove("active"); }
+    else { state.cities.add(c); chip.classList.add("active"); }
+    render();
+  });
+  chipWrap.appendChild(chip);
+});
+
+const yearFrom = document.getElementById("yearFrom");
+const yearTo = document.getElementById("yearTo");
+const yearLabel = document.getElementById("yearLabel");
+function syncYearLabel(){ yearLabel.textContent = `${state.yearFrom} – ${state.yearTo}`; }
+yearFrom.addEventListener("input", ()=>{
+  state.yearFrom = Math.min(+yearFrom.value, state.yearTo);
+  yearFrom.value = state.yearFrom;
+  syncYearLabel(); render();
+});
+yearTo.addEventListener("input", ()=>{
+  state.yearTo = Math.max(+yearTo.value, state.yearFrom);
+  yearTo.value = state.yearTo;
+  syncYearLabel(); render();
+});
+
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  state = { region:"All", cities:new Set(cities), yearFrom:2015, yearTo:2024 };
+  regionSel.value = "All";
+  document.querySelectorAll(".chip").forEach(ch=>ch.classList.add("active"));
+  yearFrom.value = 2015; yearTo.value = 2024;
+  syncYearLabel(); render();
+});
+
+function filtered(){
+  return DATA.filter(d =>
+    (state.region==="All" || d.Region===state.region) &&
+    state.cities.has(d.City) &&
+    d.Year >= state.yearFrom && d.Year <= state.yearTo
+  );
+}
+
+let trendChart, cityBarChart, catChart, regionChart;
+
+function render(){
+  syncYearLabel();
+  const rows = filtered();
+  renderKpis(rows);
+  renderTrend(rows);
+  renderCityBar(rows);
+  renderCat(rows);
+  renderRegion(rows);
+  renderTable(rows);
+}
+
+function avg(arr, key){ return arr.length ? arr.reduce((s,d)=>s+d[key],0)/arr.length : 0; }
+
+function renderKpis(rows){
+  const years = [...new Set(rows.map(d=>d.Year))].sort((a,b)=>a-b);
+  const latest = years[years.length-1], earliest = years[0];
+  const latestRows = rows.filter(d=>d.Year===latest);
+  const earliestRows = rows.filter(d=>d.Year===earliest);
+  const avgLatest = avg(latestRows, "PM2.5 (ug/m3)");
+  const avgEarliest = avg(earliestRows, "PM2.5 (ug/m3)");
+  const pctChange = avgEarliest ? ((avgLatest-avgEarliest)/avgEarliest*100) : 0;
+
+  const byCity = {};
+  rows.forEach(d=>{ (byCity[d.City] ||= []).push(d["PM2.5 (ug/m3)"]); });
+  let worst=null, worstVal=-1, best=null, bestVal=1e9;
+  Object.entries(byCity).forEach(([c,vals])=>{
+    const m = vals.reduce((a,b)=>a+b,0)/vals.length;
+    if(m>worstVal){worstVal=m; worst=c;}
+    if(m<bestVal){bestVal=m; best=c;}
+  });
+
+  const kpis = [
+    {label:`Avg PM2.5 (${latest ?? "-"})`, value: latestRows.length? avgLatest.toFixed(1)+" µg/m³":"–", cls:"bad"},
+    {label:`Change ${earliest ?? "-"}→${latest ?? "-"}`, value: rows.length? (pctChange>=0?"+":"")+pctChange.toFixed(1)+"%":"–", cls: pctChange<0? "good":"bad"},
+    {label:"Most polluted (avg, filtered)", value: worst ?? "–", sub: worst? worstVal.toFixed(1)+" µg/m³":""},
+    {label:"Cleanest (avg, filtered)", value: best ?? "–", sub: best? bestVal.toFixed(1)+" µg/m³":""},
+    {label:"City-years selected", value: rows.length, sub:"of 80 total"},
+  ];
+  const el = document.getElementById("kpiRow");
+  el.innerHTML = "";
+  kpis.forEach(k=>{
+    const div = document.createElement("div"); div.className="kpi";
+    div.innerHTML = `<div class="label">${k.label}</div><div class="value ${k.cls||""}">${k.value}</div>${k.sub?`<div class="sub">${k.sub}</div>`:""}`;
+    el.appendChild(div);
+  });
+}
+
+function renderTrend(rows){
+  const years = [];
+  for(let y=state.yearFrom; y<=state.yearTo; y++) years.push(y);
+  const avgs = years.map(y=>{
+    const rs = rows.filter(d=>d.Year===y);
+    return rs.length ? +avg(rs,"PM2.5 (ug/m3)").toFixed(1) : null;
+  });
+  const ctx = document.getElementById("trendChart");
+  if(trendChart) trendChart.destroy();
+  trendChart = new Chart(ctx, {
+    type:"line",
+    data:{ labels: years, datasets:[
+      { label:"Avg PM2.5 (selected)", data: avgs, borderColor:"#1F4E78", backgroundColor:"rgba(31,78,120,.12)", fill:true, tension:.25, pointRadius:3 },
+      { label:"NAAQS limit (40 µg/m³)", data: years.map(()=>40), borderColor:"#9AA7B0", borderDash:[6,4], pointRadius:0 },
+    ]},
+    options:{ responsive:true, plugins:{legend:{position:"bottom", labels:{boxWidth:12,font:{size:11}}}},
+      scales:{ y:{ title:{display:true,text:"µg/m³"} } } }
+  });
+}
+
+function renderCityBar(rows){
+  const byCity = {};
+  rows.forEach(d=>{ (byCity[d.City] ||= []).push(d["PM2.5 (ug/m3)"]); });
+  const entries = Object.entries(byCity).map(([c,vals])=>[c, vals.reduce((a,b)=>a+b,0)/vals.length])
+    .sort((a,b)=>b[1]-a[1]);
+  const ctx = document.getElementById("cityBarChart");
+  if(cityBarChart) cityBarChart.destroy();
+  cityBarChart = new Chart(ctx, {
+    type:"bar",
+    data:{ labels: entries.map(e=>e[0]), datasets:[{
+      label:"Avg PM2.5", data: entries.map(e=>+e[1].toFixed(1)),
+      backgroundColor: entries.map(e=>CITY_COLORS[e[0]]||"#888")
+    }]},
+    options:{ responsive:true, plugins:{legend:{display:false}}, indexAxis:"y",
+      scales:{ x:{ title:{display:true,text:"µg/m³"} } } }
+  });
+}
+
+function renderCat(rows){
+  const order = ["Good","Satisfactory","Moderate","Poor","Very Poor","Severe"];
+  const counts = order.map(c=> rows.filter(d=>d.AQI_Category===c).length);
+  const ctx = document.getElementById("catChart");
+  if(catChart) catChart.destroy();
+  catChart = new Chart(ctx, {
+    type:"doughnut",
+    data:{ labels: order, datasets:[{ data: counts, backgroundColor: order.map(c=>CAT_COLORS[c]) }] },
+    options:{ responsive:true, plugins:{legend:{position:"bottom", labels:{boxWidth:12,font:{size:11}}}} }
+  });
+}
+
+function renderRegion(rows){
+  const byRegion = {};
+  rows.forEach(d=>{ (byRegion[d.Region] ||= []).push(d["PM2.5 (ug/m3)"]); });
+  const entries = Object.entries(byRegion).map(([r,vals])=>[r, vals.reduce((a,b)=>a+b,0)/vals.length])
+    .sort((a,b)=>b[1]-a[1]);
+  const ctx = document.getElementById("regionChart");
+  if(regionChart) regionChart.destroy();
+  regionChart = new Chart(ctx, {
+    type:"bar",
+    data:{ labels: entries.map(e=>e[0]), datasets:[{ label:"Avg PM2.5", data: entries.map(e=>+e[1].toFixed(1)), backgroundColor:"#34495E" }] },
+    options:{ responsive:true, plugins:{legend:{display:false}}, scales:{ y:{ title:{display:true,text:"µg/m³"} } } }
+  });
+}
+
+function renderTable(rows){
+  const tbody = document.querySelector("#dataTable tbody");
+  tbody.innerHTML = "";
+  rows.slice().sort((a,b)=> a.Year-b.Year || a.City.localeCompare(b.City)).forEach(d=>{
+    const tr = document.createElement("tr");
+    const short = d.Data_Notes.startsWith("Reported") ? "Reported" : "Interpolated";
+    tr.innerHTML = `<td>${d.Year}</td><td>${d.City}</td><td>${d.Region}</td>
+      <td>${d["PM2.5 (ug/m3)"]}</td><td>${d["PM10 (ug/m3)"]}</td><td>${d.AQI}</td>
+      <td><span class="cat-pill" style="background:${CAT_COLORS[d.AQI_Category]}">${d.AQI_Category}</span></td>
+      <td>${short}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ---------- Tab switching ----------
+const tabCityBtn = document.getElementById("tabCityBtn");
+const tabStateBtn = document.getElementById("tabStateBtn");
+const cityView = document.getElementById("cityView");
+const stateView = document.getElementById("stateView");
+tabCityBtn.addEventListener("click", ()=>{
+  tabCityBtn.classList.add("active"); tabStateBtn.classList.remove("active");
+  cityView.style.display = ""; stateView.style.display = "none";
+});
+tabStateBtn.addEventListener("click", ()=>{
+  tabStateBtn.classList.add("active"); tabCityBtn.classList.remove("active");
+  stateView.style.display = ""; cityView.style.display = "none";
+  renderStateView();
+});
+
+// ---------- State-wise view ----------
+const stRegions = [...new Set(STATE_DATA.map(d=>d.Region))];
+const stRegionSel = document.getElementById("stRegionSel");
+stRegions.forEach(r=>{ const o=document.createElement("option"); o.value=r; o.textContent=r; stRegionSel.appendChild(o); });
+let stState = { region:"All", ncap:"All" };
+stRegionSel.addEventListener("change", ()=>{ stState.region = stRegionSel.value; renderStateView(); });
+document.getElementById("stNcapSel").addEventListener("change", (e)=>{ stState.ncap = e.target.value; renderStateView(); });
+document.getElementById("stResetBtn").addEventListener("click", ()=>{
+  stState = { region:"All", ncap:"All" };
+  stRegionSel.value = "All"; document.getElementById("stNcapSel").value = "All";
+  renderStateView();
+});
+
+let stateBarChart, stRegionChart, stNcapChart;
+
+function stFiltered(){
+  return STATE_DATA.filter(d =>
+    (stState.region==="All" || d.Region===stState.region) &&
+    (stState.ncap==="All" || d.NCAP_Non_Attainment_State===stState.ncap)
+  );
+}
+
+function renderStateView(){
+  const rows = stFiltered().slice().sort((a,b)=> b["PM2.5_2024 (ug/m3)"] - a["PM2.5_2024 (ug/m3)"]);
+
+  // KPIs
+  const avgPM = rows.length ? rows.reduce((s,d)=>s+d["PM2.5_2024 (ug/m3)"],0)/rows.length : 0;
+  const worst = rows[0], best = rows[rows.length-1];
+  const ncapCount = rows.filter(d=>d.NCAP_Non_Attainment_State==="Yes").length;
+  const kpis = [
+    {label:"States/UTs shown", value: rows.length, sub:"of 36 total"},
+    {label:"Avg PM2.5 (selected)", value: avgPM? avgPM.toFixed(1)+" µg/m³":"–"},
+    {label:"Most polluted", value: worst? worst.State:"–", sub: worst? worst["PM2.5_2024 (ug/m3)"]+" µg/m³ ("+worst.Representative_City+")":""},
+    {label:"Cleanest", value: best? best.State:"–", sub: best? best["PM2.5_2024 (ug/m3)"]+" µg/m³ ("+best.Representative_City+")":""},
+    {label:"On NCAP non-attainment list", value: ncapCount, sub:"of "+rows.length+" selected"},
+  ];
+  const kel = document.getElementById("stKpiRow");
+  kel.innerHTML = "";
+  kpis.forEach(k=>{
+    const div = document.createElement("div"); div.className="kpi";
+    div.innerHTML = `<div class="label">${k.label}</div><div class="value">${k.value}</div>${k.sub?`<div class="sub">${k.sub}</div>`:""}`;
+    kel.appendChild(div);
+  });
+
+  // Bar chart: PM2.5 by state
+  const ctx = document.getElementById("stateBarChart");
+  if(stateBarChart) stateBarChart.destroy();
+  stateBarChart = new Chart(ctx, {
+    type:"bar",
+    data:{ labels: rows.map(r=>r.State), datasets:[
+      { label:"PM2.5 2024", data: rows.map(r=>r["PM2.5_2024 (ug/m3)"]),
+        backgroundColor: rows.map(r=>CAT_COLORS[r.AQI_Category]) },
+    ]},
+    options:{ indexAxis:"y", responsive:true, plugins:{legend:{display:false}},
+      scales:{ x:{ title:{display:true,text:"µg/m³"} } } }
+  });
+
+  // Region comparison
+  const byRegion = {};
+  rows.forEach(d=>{ (byRegion[d.Region] ||= []).push(d["PM2.5_2024 (ug/m3)"]); });
+  const rentries = Object.entries(byRegion).map(([r,vals])=>[r, vals.reduce((a,b)=>a+b,0)/vals.length]).sort((a,b)=>b[1]-a[1]);
+  const ctx2 = document.getElementById("stRegionChart");
+  if(stRegionChart) stRegionChart.destroy();
+  stRegionChart = new Chart(ctx2, {
+    type:"bar",
+    data:{ labels: rentries.map(e=>e[0]), datasets:[{ label:"Avg PM2.5", data: rentries.map(e=>+e[1].toFixed(1)), backgroundColor:"#34495E" }] },
+    options:{ responsive:true, plugins:{legend:{display:false}}, scales:{ y:{ title:{display:true,text:"µg/m³"} } } }
+  });
+
+  // NCAP donut
+  const yesCount = rows.filter(d=>d.NCAP_Non_Attainment_State==="Yes").length;
+  const noCount = rows.length - yesCount;
+  const ctx3 = document.getElementById("stNcapChart");
+  if(stNcapChart) stNcapChart.destroy();
+  stNcapChart = new Chart(ctx3, {
+    type:"doughnut",
+    data:{ labels:["On NCAP list", "Not on NCAP list"], datasets:[{ data:[yesCount, noCount], backgroundColor:["#E67E22","#2ECC71"] }] },
+    options:{ responsive:true, plugins:{legend:{position:"bottom", labels:{boxWidth:12,font:{size:11}}}} }
+  });
+
+  // Table
+  const tbody = document.querySelector("#stateTable tbody");
+  tbody.innerHTML = "";
+  rows.forEach(d=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${d.State}</td><td>${d.Region}</td><td>${d.Representative_City}</td>
+      <td>${d["PM2.5_2024 (ug/m3)"]}</td><td>${d["PM10_2024 (ug/m3)"]}</td><td>${d.AQI_2024}</td>
+      <td><span class="cat-pill" style="background:${CAT_COLORS[d.AQI_Category]}">${d.AQI_Category}</span></td>
+      <td>${d.NCAP_Non_Attainment_State}</td><td>${d.NCAP_Non_Attainment_Cities_Count}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+syncYearLabel();
+render();
+
+</script>
+</body>
+</html>
